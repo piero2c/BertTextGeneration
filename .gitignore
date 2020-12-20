@@ -1,0 +1,12 @@
+logs2/
+logs/
+prepared_data/
+prepared_data_old/
+data/
+bkp/
+wandb/
+.vscode/
+*.zip
+tmp/
+*.xlsx
+__pycache__
