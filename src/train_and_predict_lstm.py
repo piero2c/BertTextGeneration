@@ -54,15 +54,15 @@ parser.add_argument('--max_review_len', type=int,
                     default=58)
 parser.add_argument('--max_title_len', type=int,
                     help='Número de tokens máximos para uma review. '\
-                         'Por padrão, utiliza 58 tokens (que corresponde ao quantil 0.9 da distribuição dos tamanhos)',
-                    default=11)
+                         'Por padrão, utiliza 12 tokens (que corresponde ao quantil 0.9 da distribuição dos tamanhos)',
+                    default=12)
 parser.add_argument('--vocab_size', type=int,
                     help='Tamanho do vocabulário do modelo. [30 mil]',
                     default=30_000)
 parser.add_argument('--uncased', action='store_true',
                     help='Aplica lower-case antes nos dados')
 parser.add_argument('--prediction_nb_batches', type=int, default=20,
-                    help='Número de batches usados na etapa de predição. Em caso de erros de memória nesta etapa, aumentar o valor desse parâmetro (10, por padrão). [10]')
+                    help='Número de batches usados na etapa de predição. Em caso de erros de memória nesta etapa, aumentar o valor desse parâmetro (20, por padrão). [20]')
 args = parser.parse_args()
 
 

@@ -147,7 +147,7 @@ if __name__ == '__main__':
                         '`bert/{tr,te}_reviews.txt`, `bert/{tr,te}_titles.txt`, e `bert/{tr,te}_labels.txt`. \n'\
                         'Apesar de separarmos os arquivos do BERT e da LSTM, o split de treino-teste é o mesmo para os dois modelos.',
                         required=True)
-    parser.add_argument('--train_size', type=float, help='Proporção do conjunto de dados de treinamento em relação à base toda. Por padrão, 0.7',
+    parser.add_argument('--train_size', type=float, help='Proporção do conjunto de dados de treinamento em relação à base toda. Por padrão, 0.8',
                         default=0.8)
     parser.add_argument('--bert_max_review_len', type=int, default=58,
                         help='Número máximo de tokens para um review. Será usado para preparar as bases do BERT.\n'\
