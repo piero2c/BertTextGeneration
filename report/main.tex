@@ -21,6 +21,8 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 
+\usepackage{tabularx}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
 
 %\usemintedstyle{borland}
 
@@ -95,8 +97,9 @@ Na Figura \ref{att_map}, é representado o mapa de atenção extraido do modelo 
 
 Seguindo o procedimento de preparação dos dados descrito no enunciado do exercício, utilizamos a mesma amostra de 80\% dos dados da base completa da B2W extraidos para o treinamento da LSTM. Após dividir os dados para a geração de texto token a token (conforme descrito no enunciado) o conjunto de treino final gerado possui cerca de 600 mil instâncias. Por limitações computacionais, utilizei apenas 2/3 destes dados para treinar os modelos durante apenas uma única época de treinamento. Por sua vez, como a função de custo foi calculada apenas em dados que não foram vistos previamente pelo modelo, não foi necessário utilizar \textit{early-stopping} para previnir \textit{overfitting}.
 
-O modelo BERT-CLS convergiu de maneira estável, sem precisar de um tamanho de \textit{batch} muito elevado, finalizando após cerca de 10h de treinamento no \textit{Google Colab}. O modelo BERT-MASK exigiu maior esforço de treinamento e teve convergência difícil, o que é justificável, visto que neste modelo alteramos a tarefa base em que o modelo foi originalmente treinado. Para garantir mais estabilidade no treinamento do BERT-MASK foi necessário utilizar um tamanho de \textit{batch} maior. Para não exceder a capacidade da infraestrutura disponível, isso foi possível usando \textit{gradient accumulation}. Para encomtrar as especificações exatas do treinamento dos modelos, consulte o Apêndice \ref{ap1}.
+O modelo BERT-CLS convergiu de maneira estável, sem precisar de um tamanho de \textit{batch} muito elevado, finalizando após cerca de 10h de treinamento no \textit{Google Colab}. O modelo BERT-MASK exigiu maior esforço de treinamento e teve convergência difícil, o que é justificável, visto que neste modelo alteramos a tarefa base em que o modelo foi originalmente treinado. Para garantir mais estabilidade no treinamento do BERT-MASK foi necessário utilizar um tamanho de \textit{batch} maior. Para não exceder a capacidade da infraestrutura disponível, isso foi possível usando \textit{gradient accumulation}. Para encomtrar as especificações exatas do treinamento dos modelos, consulte o arquivo \texttt{README.md}.
 
+\vspace{5em}
 
 \section{Resultados experimentais}
 
@@ -123,6 +126,8 @@ P_n = \frac{|\text{Modelo}_n \cap \text{Ref}_n| + 1}{|\text{Modelo}_n| + 1}, \qu
 
 Os resultados obtidos pelos três modelos são apresentados na Tabela \ref{table:results}.
 
+\pagebreak
+
 \begin{table}[h!]
 	\centering
 	\begin{tabular}{@{}lrrrrrrr@{}}
@@ -141,6 +146,38 @@ Os resultados obtidos pelos três modelos são apresentados na Tabela \ref{table
 	\end{tabular}
 	\caption{Métricas avaliadas no conjunto de testes para os três modelos.}
 	\label{table:results}
+\end{table}
+
+Verificamos que nas 7 métricas usadas para comparar os modelos, o modelo BERT-MASK foi o que obteve o melhor resultado, enquanto a BiLSTM apresentou em média o pior resultado dos três modelos. Comparando os resultados obtidos na avaliação humana entre os modelos BERT-CLS e BERT-MASK, podemos hipotetizar que mesmo com grandes alterações na tarefa original, o modelo BERT-MASK pareceu aproveitar melhor o modelo pré-treinado. Porém, para testar efetivamente essa hipótese seria necessário um tratamento estatístico mais adequado e um número maior de experimentos.
+
+É possível verificar também que na métrica medida via avaliação humana (M-Namorada), o gap entre os modelos baseados no BERT e a BiLSTM é muito maior do que nas demais métricas. Uma análise mais detalhada desta métrica revela que o modelo BiLSTM parece produzir títulos muito simplistas e às vezes é incapaz de identificar corretamente a situação que o cliente descreve, alguns exemplos destas situações são apresentados na Tabela \ref{exemplos}.
+
+\begin{table}
+\centering
+
+\begin{tabular}{p{4cm}llllp{3.5cm}l}
+\toprule
+\textit{Review} & BiLSTM & N & BERT-CSL & N & BERT-MASK & N \\ \midrule
+
+\parbox{4cm}{Ótima bicicleta , minha sobrinha amou... chegou na data prevista ... vendedor excelente} & Excelente produto & 7  & Ótimo produdo & 7 & Ótima bicicleta & 10 \\
+
+\\  \\
+
+\parbox{4cm}{Estou aguardando a troca do produto, enviei pelo correio o produto com defeito e estou esperando a loja retornar com a resposta sobre a troca ou devolução do valor.} & Não recebi o produto & 0 & Produto com defeito & 7 & Produto com defeito & 7 \\
+
+\\ \\
+
+\parbox{4cm}{Não gostei do produto péssima qualidade. Soltou todas os encaixe de metal..Solicito a troca do produto ou devolução do dinheiro. ... os encaixe de metal soltaram e não mas na piscina e uma lona final e simples....fiquei decepciona com produto fora o atraso na entrega. ....péssimo aguardo solução} & Não recebi o produto & 0 & Péssimo produto & 7 & Não gostei do produto péssima qualidade. Soltou & 10 \\
+
+\\  \\
+
+\parbox{4cm}{Só imprime, nem cópia ela tira! Tão simples que poderia pelo menos vir com o cabo para o PC. Ela é branca, mas o fio de luz é preto. Impressora quebra galho, apenas compre como último recurso!} & Bom & 0 & PÉSSIMA & 6 & Impressora quebra galho & 9
+
+\\ \bottomrule
+
+\end{tabular}
+\caption{Exemplos selecionados da avaliação humana dos títulos gerados pelos três modelos e suas respectivas notas (0-10). Foram escolhidos exemplos em que o modelo BiLSTM não é capaz de identificar corretamente a situação ou de produzir um título com bom nível de detalhamento.} 
+\label{exemplos}
 \end{table}
 
 \printbibliography
