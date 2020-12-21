@@ -1,4 +1,4 @@
-# EP2
+# EP3
 Autor: Piero Conti Kauffmann (8940810)
 
 ----------------------------
@@ -10,35 +10,38 @@ Para executar os códigos deste trabalho, são necessárias as seguintes depend�
 * tensorflow==2.3.1
 * nltk>=3.5 
     * tokenizador de sentenças PUNKT pt-br
-    * SnowballStemmer
-* Arquivo de dados B2W Completo (recomendado) ou amostra
+    * SnowballStemmer (necessário para usar a métrica METEOR corretamente)
+* Arquivo de dados B2W Completo (recomendado) ou amostra de dez mil linhas
 * transformers==3.5.1
 * tqdm
 
 ## Binários dos modelos (BERT-CLS e BERT-MASK) treinados
+
 Para os modelos BERT-CLS e BERT-MASK, que exigem um esforço computacional maior, disponibilizei os binários dos modelos treinados
-no `Google Drive`. Você pode inclui-los na raiz do projeto executando:
+no `Google Drive` para consulta. Caso deseje baixar os modelos, use estes links:
+
+* [BERT-CLS](https://drive.google.com/file/d/178WRQ-l5vPb4crORyYqGcllrn4DRDS0z/view?usp=sharing)
+* [BERT-MASK](https://drive.google.com/file/d/1uSaoRLbWq-cdcHAdrVHKhu6uxSimPs46/view?usp=sharing)
 
 ```
 cd models
 
 # BERT-CLS
-wget https://drive.google.com/file/d/178WRQ-l5vPb4crORyYqGcllrn4DRDS0z/view?usp=sharing .
 tar -xzf ft_bert_cls.tar.gz
 
 # BERT-MASK
-wget https://drive.google.com/file/d/1uSaoRLbWq-cdcHAdrVHKhu6uxSimPs46/view?usp=sharing .
 tar -xzf ft_bert_mask.tar.gz
 ```
 
-Com os binários na pasta models, não é necessário executar os scripts de treinamento `train_bert_cls.py` e `train_bert_mask.py`.
+Com os binários na pasta `models`, não é necessário executar os scripts de treinamento `train_bert_cls.py` e `train_bert_mask.py`.
 
 ## Títulos gerados pelos modelos treinados e métrica de avaliação humana
 
-Neste repositório, os títulos gerados pelos modelos finais treinados já estão na pasta `predictions` para consulta. Para reproduzir o pipeline completo de treinamento, siga as instruições do item à seguir.
+Neste repositório, os títulos gerados pelos modelos finais treinados já estão na pasta `predictions` para consulta, assim como as métricas finais em `scores/results.csv`. 
+A métrica de avaliação humana usa os primeiros 200 dados da amostra aleatória de testes foi utilizada. Você pode consultar estes dados [neste link](https://docs.google.com/spreadsheets/d/1v9te15-LVNhdp3a1Iksk0YgP8a0gX4CPlsu6Jc0_5cI/edit?usp=sharing).
 
-Para calcular a métrica de avaliação humana, os primeiros 200 dados da amostra aleatória de testes foi utilizada. Você pode consultar estes dados [neste link](https://docs.google.com/spreadsheets/d/1v9te15-LVNhdp3a1Iksk0YgP8a0gX4CPlsu6Jc0_5cI/edit?usp=sharing).
-
+As métricas ACC, BLEU, METEOR dos modelos finais também podem ser consultadas em `scores/results.csv` caso seja necessário.
+Para reproduzir o pipeline completo de treinamento, siga as instruições do guia à seguir.
 
 ## Instruções para reproduzir os experimentos
 
@@ -57,7 +60,7 @@ wget https://github.com/alan-barzilay/NLPortugues/blob/master/Semana%2003/data/b
 No diretório raiz da discplina, executar:
 
 ```
-python3 src/prepare.py -i ./data/B2W-Reviews01.csv -o ./prepared_data
+python3 src/prepare_data.py -i ./data/B2W-Reviews01.csv -o ./prepared_data
 ```
 
 **Importante**: Caso você esteja usando a versão reduzida da base da B2W, ative a opção `--comma_separator`.

@@ -61,7 +61,7 @@ parser.add_argument('--vocab_size', type=int,
                     default=30_000)
 parser.add_argument('--uncased', action='store_true',
                     help='Aplica lower-case antes nos dados')
-parser.add_argument('--prediction_nb_batches', type=int, default=20,
+parser.add_argument('--prediction_nb_batches', type=int, default=30,
                     help='Número de batches usados na etapa de predição. Em caso de erros de memória nesta etapa, aumentar o valor desse parâmetro (20, por padrão). [20]')
 args = parser.parse_args()
 
