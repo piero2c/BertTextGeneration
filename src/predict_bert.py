@@ -131,7 +131,6 @@ if __name__ == "__main__":
                 titles += list(bert_write(batch, tokenizer, bert, max_title_len=args.max_title_len))
             except Exception as e:
                 print(f'Erro no batch {batch_nb}: {str(e)}')
-                import ipdb; ipdb.set_trace()
         
         titles = [title + '\n' for title in titles]
 

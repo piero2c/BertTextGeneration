@@ -23,12 +23,22 @@ no `Google Drive`. Você pode inclui-los na raiz do projeto executando:
 cd models
 
 # BERT-CLS
-wget 
+wget https://drive.google.com/file/d/178WRQ-l5vPb4crORyYqGcllrn4DRDS0z/view?usp=sharing .
+tar -xzf ft_bert_cls.tar.gz
 
 # BERT-MASK
+wget https://drive.google.com/file/d/1uSaoRLbWq-cdcHAdrVHKhu6uxSimPs46/view?usp=sharing .
+tar -xzf ft_bert_mask.tar.gz
 ```
 
 Com os binários na pasta models, não é necessário executar os scripts de treinamento `train_bert_cls.py` e `train_bert_mask.py`.
+
+## Títulos gerados pelos modelos treinados e métrica de avaliação humana
+
+Neste repositório, os títulos gerados pelos modelos finais treinados já estão na pasta `predictions` para consulta. Para reproduzir o pipeline completo de treinamento, siga as instruições do item à seguir.
+
+Para calcular a métrica de avaliação humana, os primeiros 200 dados da amostra aleatória de testes foi utilizada. Você pode consultar estes dados !(neste link)[https://docs.google.com/spreadsheets/d/1v9te15-LVNhdp3a1Iksk0YgP8a0gX4CPlsu6Jc0_5cI/edit?usp=sharing].
+
 
 ## Instruções para reproduzir os experimentos
 
@@ -77,6 +87,8 @@ Para treinar a BiLSTM Encoder-Decoder com mecanismo de atenção, basta executar
 python3 src/train_and_predict_lstm.py
 ```
 
+Após o final do treinamento, os pesos da rede treinada serão salvos em `models/lstm_weights` e os títulos gerados para o conjunto de testes serão salvos em `predictions/lstm.txt`.
+
 Use a flag `--help` para ver todas as opções do script, e se atente aos parâmetros `--batch_size`, `--vocab_size`, `--emb_size` e `--prediction_nb_batches` caso queira diminuir o uso de VRAM. 
 
 **Importante**: Na etapa de previsão do conjunto de testes é necessário dividir o dataset em partes para não exceder o limite de VRAM disponível. O parâmetro `--prediction_nb_batches` controla o número de batches para a etapa de previsão e não afeta o modelo treinado. Caso você tenha problemas de falta de memória na etapa de previsão, tente aumentar o valor desse parâmetro (por padrão, 20). 
@@ -101,23 +113,49 @@ Algumas observações importante:
 
 Use a flag `--help` para ver todas as opções do script.
 
-# Modelos unidirecionais
-python3 src/train.py --epochs 100 --unidirectional --dropout-rate=0.0 --freeze-emb --maxlen 400
-python3 src/train.py --epochs 100 --unidirectional --dropout-rate=0.25 --freeze-emb --maxlen 400
-python3 src/train.py --epochs 100 --unidirectional --dropout-rate=0.5 --freeze-emb --maxlen 400
-```
-Os modelos escolhidos via `early-stopping` estarão na pasta `./models` assim como os arquivos `training_logs.csv` respectivos com o log de treinamento completo dos modelos.
-Use a flag `--help` para ver todas as opções de treinamento.
+### Modelo BERT-MASK
 
-### Avaliar performance do modelo
-
-No diretório raiz, executar:
+O treinamento do BERT-MASK é mais custoso computacionalmente pois exige tamanhos de *batchs* maiores. Recomendo utilizar a infra-estrutura do `Google Colab`. Assim como o BERT-CLS, para treinar o modelo basta usar o script `src/train_bert_mask.py`
 
 ```
-python3 src/evaluate.py
+python3 src/train_bert_mask.py
 ```
 
-Os gráficos gerados estarão no diretório `./report/`. 
-A tabela de resultados finais é apresentada no `stdout` do script.
+O modelo finalizado será salvo na pasta `models/ft_bert_mask`.
 
+As mesmas observações do modelo BERT-CLS também se aplicam aqui:
+* Caso você tenha alterado os valores das opções `--bert_max_review_len` e `--bert_max_title_len` no script `src/prepare_data.py`, é necessário fornecer os mesmo valores utilizados neste script também, por meio dos parâmetros `--max_review_len` e `--max_title_len`.
+* A base de dados da B2W completa é grande e, visto que o preprocessamento dos dados para este modelo aumenta o número de instâncias, pode ser necessário reduzir o número de instâncias de treinamento dependendo de quanta RAM estiver disponível na sua máquina. Para controlar o tamanho do dataset que será utilizado no treinamento, use a opção `--nb_instances`, caso contrário, o dataset inteiro será usado.
+* Caso queira diminuir também o uso de VRAM, se atente às opções `--nb_grad_acc` e `--batch_size`.
+
+Use a flag `--help` para ver todas as opções do script.
+
+### Realizar predição para os modelos BERT-CLS e BERT-MASK
+
+Com os binários dos modelos treinados na pasta `models/ft_bert_cls` e `models/ft_bert_mask`, é possível executar o script de geração dos títulos usando o script `src/predict_bert.py`.
+
+```
+python3 src/predict_bert.py
+```
+
+As previsões serão salvas em `predictions/bert_cls.txt` e `predictions/bert_mask.txt`. (Este repositório já inclui estes arquivos para consulta)
+
+Caso deseje fazer a previsão apenas do modelo BERT-CLS ou do modelo BERT-MASK, use as flags `--only_cls` ou `--only_mask`. Por padrão, será calculada a previsão para os dois modelos.
+
+Repito aqui algumas observações importantes:
+* Caso você tenha alterado os valores das opções `--bert_max_review_len` e `--bert_max_title_len` no script `src/prepare_data.py`, é necessário fornecer os mesmo valores utilizados neste script também, por meio dos parâmetros `--max_review_len` e `--max_title_len`.
+* Caso queira diminuir o uso de VRAM, se atente às opções `--prediction_batch_size`
+
+
+### Avaliar performance de todos os modelos
+
+Com todas as previsões salvas na pasta `predictions`, as métricas podem ser obtidas usando o script `src/evaluate_models.py`
+
+
+```
+python3 src/evaluate_models.py
+```
+
+Consulte as opções usando a flag `--help`.
+O arquivo de saída produzido com as métricas será salvo em `scores/results.csv`.
 
