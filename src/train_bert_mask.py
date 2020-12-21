@@ -57,7 +57,7 @@ parser.add_argument('--lr', type=float, help='Learning rate do otimizador ADAM. 
 parser.add_argument('--nb_grad_acc', type=int, help='Número de etapas de `gradient_accumulation` por batch [4]', default=4)
 parser.add_argument('--batch_size', type=int, help='Tamanho do batch (que será multiplicado por `nb_grad_acc`) [12]', default=12)
 parser.add_argument('--log_each', type=int, help='Número de iterações para que uma mensagem de evolução do treinamento seja exibida [1]', default=1)
-parser.add_argument('--save_each', type=int, help='Salva modelo a cada `--save-each` iterações de treinamento [100]', default=100)
+parser.add_argument('--save_each', type=int, help='Salva modelo a cada `--save-each` iterações de treinamento [100]', default=10_000)
 
 
 if __name__ == "__main__":
@@ -135,8 +135,8 @@ if __name__ == "__main__":
                 print(f'Iter {i}/{nb_opt_steps}: {loss_value}')
             
             if (i+1) % args.save_each == 0:
-                bert.save_pretrained(f'./bert_mask_ckpt-{i}')
+                bert.save_pretrained(root_dir / f'models/bert_mask_ckpt-{i}')
                 print(f'Saved model in ./bert_mask_ckpt-{i}')
 
-    print(f'Treinamento finalizado. Salvando resultado models/bert_mask')
-    bert.save_pretrained(str(root_dir / 'models/bert_mask'))
+    print(f'Treinamento finalizado. Salvando resultado models/ft_bert_mask')
+    bert.save_pretrained(str(root_dir / 'models/ft_bert_mask'))

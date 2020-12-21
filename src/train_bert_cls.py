@@ -95,15 +95,15 @@ if __name__ == "__main__":
 
     # Define parâmetros de treinamento
     training_args = TFTrainingArguments(
-        output_dir='./results2', 
-        logging_dir='./logs2',       
-        learning_rate=5e-5,  
-        num_train_epochs=1,
-        save_steps=2_000,
-        logging_steps=10,
-        per_device_train_batch_size=10,
-        gradient_accumulation_steps=2,
-        save_total_limit=10,
+        output_dir=str(root_dir / f'bert_cls_ckpts'), 
+        logging_dir=str(root_dir / f'bert_cls_logs'),       
+        learning_rate=args.lr,  
+        num_train_epochs=args.nb_epochs,
+        save_steps=args.save_each,
+        logging_steps=args.log_each,
+        per_device_train_batch_size=args.batch_size,
+        gradient_accumulation_steps=args.nb_grad_acc,
+        save_total_limit=3,
     )
     
     # Carrega BERT pré-treinado para o português
