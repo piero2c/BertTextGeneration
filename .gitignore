@@ -1,9 +1,10 @@
 logs2/
 logs/
-prepared_data/
+prepared_data/bert
+prepared_data/lstm
 prepared_data_old/
 notebooks/*
-data/
+data/*.csv
 bkp/
 wandb/
 .vscode/
