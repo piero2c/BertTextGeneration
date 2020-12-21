@@ -37,13 +37,13 @@ Com os binários na pasta models, não é necessário executar os scripts de tre
 
 Neste repositório, os títulos gerados pelos modelos finais treinados já estão na pasta `predictions` para consulta. Para reproduzir o pipeline completo de treinamento, siga as instruições do item à seguir.
 
-Para calcular a métrica de avaliação humana, os primeiros 200 dados da amostra aleatória de testes foi utilizada. Você pode consultar estes dados !(neste link)[https://docs.google.com/spreadsheets/d/1v9te15-LVNhdp3a1Iksk0YgP8a0gX4CPlsu6Jc0_5cI/edit?usp=sharing].
+Para calcular a métrica de avaliação humana, os primeiros 200 dados da amostra aleatória de testes foi utilizada. Você pode consultar estes dados [neste link](https://docs.google.com/spreadsheets/d/1v9te15-LVNhdp3a1Iksk0YgP8a0gX4CPlsu6Jc0_5cI/edit?usp=sharing).
 
 
 ## Instruções para reproduzir os experimentos
 
 ## Baixar os dados
-Nos experimentos, utilizei a base de dados completa de reviews da ![B2W](https://github.com/b2wdigital/b2w-reviews01/blob/master/B2W-Reviews01.csv), mas também é possível utilizar a versão reduzida de apenas 10 mil linhas. Para isso, basta executar na raiz do diretório do projeto:
+Nos experimentos, utilizei a base de dados completa de reviews da [B2W](https://github.com/b2wdigital/b2w-reviews01/blob/master/B2W-Reviews01.csv), mas também é possível utilizar a versão reduzida de apenas 10 mil linhas. Para isso, basta executar na raiz do diretório do projeto:
 
 ```
 # Base completa
@@ -57,7 +57,7 @@ wget https://github.com/alan-barzilay/NLPortugues/blob/master/Semana%2003/data/b
 No diretório raiz da discplina, executar:
 
 ```
-python3 src/prepare.py -i ./data/B2W-Reviews01.csv -o ./prepared_data --train_size 0.8
+python3 src/prepare.py -i ./data/B2W-Reviews01.csv -o ./prepared_data
 ```
 
 **Importante**: Caso você esteja usando a versão reduzida da base da B2W, ative a opção `--comma_separator`.
@@ -138,7 +138,7 @@ Com os binários dos modelos treinados na pasta `models/ft_bert_cls` e `models/f
 python3 src/predict_bert.py
 ```
 
-As previsões serão salvas em `predictions/bert_cls.txt` e `predictions/bert_mask.txt`. (Este repositório já inclui estes arquivos para consulta)
+As previsões serão salvas em `predictions/bert_cls.txt` e `predictions/bert_mask.txt`. (Este repositório já inclui estes arquivos caso você queira consulta-los)
 
 Caso deseje fazer a previsão apenas do modelo BERT-CLS ou do modelo BERT-MASK, use as flags `--only_cls` ou `--only_mask`. Por padrão, será calculada a previsão para os dois modelos.
 
@@ -157,5 +157,5 @@ python3 src/evaluate_models.py
 ```
 
 Consulte as opções usando a flag `--help`.
-O arquivo de saída produzido com as métricas será salvo em `scores/results.csv`.
+O arquivo de saída produzido com as métricas será salvo em `scores/results.csv` (caso queira consultar, este arquivo também já está salvo).
 

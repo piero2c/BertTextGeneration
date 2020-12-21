@@ -153,7 +153,6 @@ if __name__ == '__main__':
                         help='Número máximo de tokens para um review. Será usado para preparar as bases do BERT.\n'\
                              'A truncagem é feita com base no tokenizador do BERT pré-treinado, e portanto não pode ser utilizada para a LSTM.\n'\
                              'Caso deseje controlar a truncagem para a LSTM, existe um parâmetro para isso no script de treinamento `train_lstm.py`.\n '\
-                             'Para entender porque o truncamento é feito nesta etapa para o BERT, consulte README.md. '\
                              'Por padrão, utiliza o tamanho máximo de 58 tokens, que é próximo do quantil 0.8 da distribuição de tamanhos de reviews.')
     parser.add_argument('--bert_max_title_len', type=int, default=12,
                         help='Analogamente ao parâmetro `--bert_max_review_len`, controla o número máximo de tokens de um título.\n'\
