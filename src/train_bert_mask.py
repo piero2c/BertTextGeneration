@@ -35,6 +35,15 @@ def criterion(y_true, y_pred):
         tf.nn.sparse_softmax_cross_entropy_with_logits(y_true, y_pred[batch_input['input_ids'] == _MASK])
     )
 
+def load_first(fpath, n):
+    with open(fpath, encoding='utf-8') as f_iter:
+        if n == -1:
+            sample = [line.rstrip() for line in tqdm(f_iter.readlines())]
+        else:
+            sample = [next(f_iter).rstrip() for _ in tqdm(range(n))]
+    return sample
+
+# Interface CLI
 parser = argparse.ArgumentParser('Treina modelo BERT-MASK.')
 parser.add_argument('--nb_instances', type=int,
                     help='Limita o número de instâncias de treinamento (prepared_data/bert/tr_*). Se --nb_instance=-1, utiliza todos os dados. [-1]',
@@ -66,14 +75,6 @@ if __name__ == "__main__":
     # Obtém os ids dos tokens especiais
     _CLS, _MASK, _EOS, _SEP  = tokenizer.encode('[MASK] [unused1]')
 
-    def load_first(fpath, n):
-        with open(fpath, encoding='utf-8') as f_iter:
-            if n == -1:
-                sample = [line.rstrip() for line in tqdm(f_iter.readlines())]
-            else:
-                sample = [next(f_iter).rstrip() for _ in tqdm(range(n))]
-        return sample
-
     print('Carregando dados...')
 
     reviews = load_first(root_dir / 'prepared_data/bert/tr_reviews.txt', n=args.nb_instances)
@@ -83,10 +84,13 @@ if __name__ == "__main__":
     print(f'Iniciando tokenização. Isso pode levar alguns minutos e consumir bastante memória (fique de olho!)')
 
     # Aplica tokenizador (isso pode levar alguns minutos e irá consumir uma quantidade significativa de memória)
+    # Precisamos passar os títulos no campo `text_pair` para garantir que os embeddings do tipo de sentença  (sentence_type)
+    # do bert sejam passados corretamente para o modelo
     dataset = tokenizer(reviews, text_pair=titles, padding=True,
                         max_length=args.max_review_len + args.max_title_len + 2,
                         truncation=True)
 
+    # Cria tf.dataset dos dados de treino
     train_dataset = tf.data.Dataset.from_tensor_slices((
         dict(dataset),
         np.array(labels, dtype='int32')

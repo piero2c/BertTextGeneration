@@ -141,31 +141,6 @@ def build_model(max_len_X, max_len_y, vocab_size, emb_dim):
     # Retorna keras.Model
     return keras.Model(inputs=[input_review, input_review_title], outputs=decoded_title)
   
-def write_title(model, text2idx, review_text_idx, return_also_idx=False):
-    start = ['<s>']
-    start_idx = [text2idx.word_index['<s>']]
-    
-    for i in range(11):
-        out = model.predict([
-            np.array([review_text_idx]), pad_y(text2idx.texts_to_sequences([start]))
-        ])
-        
-        next_token = text2idx.sequences_to_texts(
-            [[out.argmax(axis=-1)[0][i]]]
-        )[0]
-        
-        start.append(next_token)
-        start_idx.append([out.argmax(axis=-1)[0][i]][0])
-        
-        if next_token == '</s>':
-            break
-    
-    if return_also_idx:
-        return start, np.array(start_idx)
-    
-    return start
-
-
 def write_titles(model, text2idx, review_texts_idx, return_also_idx=False, max_title_len=11):
     pad_y = lambda y: pad_sequences(y, maxlen=max_title_len, padding='post')
 
