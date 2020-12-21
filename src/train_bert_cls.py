@@ -66,7 +66,7 @@ if __name__ == "__main__":
         output_dir='./results2', 
         logging_dir='./logs2',       
         learning_rate=5e-5,  
-        max_epochs=1,
+        num_train_epochs=1,
         save_steps=2_000,
         logging_steps=10,
         per_device_train_batch_size=10,

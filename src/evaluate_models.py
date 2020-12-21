@@ -9,14 +9,14 @@ from nltk.translate.meteor_score import single_meteor_score
 
 parser = argparse.ArgumentParser('Cálcula métricas de performance BLEU e METEOR.')
 parser.add_argument('--max_ngrams', type=int, help='Maior número de n-gramas para cálculo do BLEU. Serão calculados BLEU-1, ..., BLEU-`max_ngrams`. Por padrão, 3.',
-                    default=3)
+                    default=4)
 
 pred_path = Path(__file__).parent.parent / 'predictions'
 p_data_path = Path(__file__).parent.parent / 'prepared_data/lstm/'
 
 stemmer = SnowballStemmer('portuguese')
 
-def cumulative_bleu_scores(titles, predictions, ngram_order=3):
+def cumulative_bleu_scores(titles, predictions, ngram_order=4):
     results = np.zeros(ngram_order)
     
     # Obtém título e predição para o texto `text_nb`.
@@ -27,7 +27,7 @@ def cumulative_bleu_scores(titles, predictions, ngram_order=3):
         # p/ que este tenha dimensão 4.
         weighting = tuple(1/(ngram+1) if i <= ngram else 0 for i in range(ngram_order))
         results[ngram] = corpus_bleu(titles, predictions, weights=weighting,
-                                              smoothing_function=SmoothingFunction().method3)
+                                              smoothing_function=SmoothingFunction().method2)
 
     
     return results

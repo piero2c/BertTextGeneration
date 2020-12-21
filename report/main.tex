@@ -12,6 +12,14 @@
 \usepackage{algorithmic}
 \usepackage{tikz}
 \usepackage[portuguese]{babel}
+\usepackage{booktabs}
+
+% ref packages
+\usepackage{nameref}
+% folowing  must be in this order
+\usepackage{varioref}
+\usepackage{hyperref}
+\usepackage{cleveref}
 
 
 %\usemintedstyle{borland}
@@ -40,10 +48,10 @@ Na componente do decoder do modelo, escolhi incluir duas LSTMs unidirecionais em
 \vspace{2em}
 
 \begin{figure}[h]
-\input{lstm_diag.tikz}
-\label{lstm_fig}
-\caption{Diagrama do modelo encoder-decoder BiLSTM com camada de atenção escolhido. Os tokens especiais \texttt{[bos]} e \texttt{[eos]} delimitam respectivamente o início e fim das sequências de texto.}
 \centering
+\input{lstm_diag.tikz}
+\caption{Diagrama do modelo encoder-decoder BiLSTM com camada de atenção escolhido. Os tokens especiais \texttt{[bos]} e \texttt{[eos]} delimitam respectivamente o início e fim das sequências de texto.}
+\label{lstm_fig}
 \end{figure}
 
 O mecanismos de atenção adotado para o modelo foi o mecanismo de atenção global proposto por \textcite{luong2015effective} com escores de atenção obtidos a partir do produto interno dos \textit{hidden states}. Graças à segunda LSTM do decoder, o modelo também é capaz de utilizar a informação dos vetores de contexto dos tokens passados.
@@ -56,10 +64,10 @@ Neste trabalho iremos experimentar com duas variantes de soluções baseadas no 
 A camada final associada ao token \texttt{[CLS]} do BERT é pré-treinada com a tarefa de \textit{Next Sentence Prediction} (NSP), que consiste em tentar adivinhar se a segunda sentença fornecida (separada pelo token \texttt{[SEP]}) vem depois da primeira sentença em um texto corrido. Para o problema em questão, podemos descartar a camada densa de classificação binária usada para o objetivo de NSP e criar uma nova camada densa com a mesma dimensão final do vocabulário de saída, e utilizarmos essa nova componente para prever o próximo token do título de maneira autoregressiva. Chamaremos esse modelo de BERT-CLS.
 
 \begin{figure}[h]
-	\input{bert_diag.tikz}
-	\label{bert_fig}
-	\caption{Diagrama ilustrativo do BERT para a task compartilhada de \textit{Masked Language Modelling} e \textit{Next Sentence Prediction}. }
 	\centering
+	\input{bert_diag.tikz}
+	\caption{Diagrama ilustrativo do BERT para a task compartilhada de \textit{Masked Language Modelling} e \textit{Next Sentence Prediction}. }
+	\label{bert_fig}
 \end{figure}
 
 Alternativamente, podemos tentar aproveitar a semelhança do objetivo deste trabalho com a tarefa de \textit{Masked Language Modelling} (MLM) do modelo pré-treinado, que tenta recuperar os tokens mascarados aleatóriamente nas sentenças. Apesar de parecer a melhor alternativa, existem algumas desvantagens aparentes: no objetivo de geração de texto deste trabalho, vamos sempre adicionar o token \texttt{[MASK]} no final da segunda sentença, que estará sempre seguido do token final \texttt{[SEP]}. Naturalmente, isto irá fazer o modelo original acreditar que o token mascarado é sempre um token próximo ao final de sentença (um caractere de ponto final, por exemplo) e irá prejudicar a performance do texto que iremos gerar de maneira causal autoregressiva. Ao fazermos o \textit{fine tuning} segundo esta abordagem, estamos grosseiramente tentando converter um modelo treinado com a tarefa de \textit{Masked Language Modelling} para um modelo causal de sumarização de textos.
@@ -72,26 +80,68 @@ Alternativamente, podemos tentar aproveitar a semelhança do objetivo deste trab
 
 O treinamento da encoder-decoder BiLSTM é feito utilizando a técnica \textit{teacher forcing} (\textcite{williams1989learning}), que passa a sequência correta inteira de tokens para o decoder que tenta prever o próximo token relativamente a cada item da sequência passada. Essa técnica na prática acelera a convergência de modelos sequenciais e usualmente também facilita a implementação destes modelos.
 
-Treinamos o modelo com \textit{early-stopping} em uma amostra de 72\% do conjunto total de dados, validando o modelo no final de cada época em um conjunto de validação que corresponde a 8\% dos dados. O treinamento do modelo é interrompido se o custo calculado no conjunto de validação não diminuir em 5 épocas consecutivas. Quando o treinamento é interrompido, apenas o modelo com menor custo no conjunto de validação é salvo.
+Treinamos o modelo com \textit{early-stopping} em uma amostra de 72\% do conjunto de dados da base completa da B2W, validando o modelo ao final de cada época em um conjunto de validação que corresponde a 8\% dos dados. O treinamento é interrompido se o custo calculado no conjunto de validação não diminuir em 5 épocas consecutivas. Quando o treinamento é interrompido, apenas o modelo com menor custo no conjunto de validação é salvo.
+
+Na Figura \ref{att_map}, é representado o mapa de atenção extraido do modelo para um exemplo do conjunto de validação. Verificamos que o modelo treinado foca a atenção em algumas palavras chaves úteis para gerar o título "Produto bom", como "não trava" e "Sem comentários".
+
+\begin{figure}[h!]
+	\scalebox{0.73}{\input{fig2.pgf}}
+	\centering
+	\caption{Mapa de atenção para uma avaliação do conjunto de validação com o título gerado pelo modelo recursivamente (eixo horizontal) e a avaliação submetida pelo cliente (eixo vertical).}
+	\label{att_map}
+\end{figure}
 
 \subsection{BERT-CLS e BERT-MASK}
 
-Seguindo o procedimento de preparação dos dados descrito no enunciado do exercício, utilizamos a mesma amostra de 80\% dos dados extraidos para o treinamento da LSTM. Ao dividir a geração de texto token a token, o processamento destes dados produz uma amostra com mais instâncias. Por limitações computacionais, utilizei apenas 2/3 destes dados durante apenas uma única época de treinamento. Por sua vez, como a função de custo foi calculada apenas em dados que não foram antes vistos pelo modelo, não foi necessário utilizar \textit{early-stopping} para previnir \textit{overfitting}.
+Seguindo o procedimento de preparação dos dados descrito no enunciado do exercício, utilizamos a mesma amostra de 80\% dos dados da base completa da B2W extraidos para o treinamento da LSTM. Após dividir os dados para a geração de texto token a token (conforme descrito no enunciado) o conjunto de treino final gerado possui cerca de 600 mil instâncias. Por limitações computacionais, utilizei apenas 2/3 destes dados para treinar os modelos durante apenas uma única época de treinamento. Por sua vez, como a função de custo foi calculada apenas em dados que não foram vistos previamente pelo modelo, não foi necessário utilizar \textit{early-stopping} para previnir \textit{overfitting}.
 
-O modelo BERT-CLS convergiu de maneira estável, sem precisar de um tamanho de \textit{batch} muito elevado, finalizando após cerca de 20h de treinamento no \textit{Google Colab}. O modelo BERT-MASK que exigiu maior esforço de treinamento e teve convergência difícil, o que é justificável, visto que alteramos a tarefa base em que o modelo foi treinado originalmente. Para garantir estabilidade no treinamento do BERT-MASK foi necessário utilizar um tamanho de \textit{batch} elevado por meio da técnica de \textit{gradient accumulation}, para não exceder a capacidade da infraestrutura disponível. A configuração exata do treinamento segue reproduzida na tabela a seguir
+O modelo BERT-CLS convergiu de maneira estável, sem precisar de um tamanho de \textit{batch} muito elevado, finalizando após cerca de 10h de treinamento no \textit{Google Colab}. O modelo BERT-MASK exigiu maior esforço de treinamento e teve convergência difícil, o que é justificável, visto que neste modelo alteramos a tarefa base em que o modelo foi originalmente treinado. Para garantir mais estabilidade no treinamento do BERT-MASK foi necessário utilizar um tamanho de \textit{batch} maior. Para não exceder a capacidade da infraestrutura disponível, isso foi possível usando \textit{gradient accumulation}. Para encomtrar as especificações exatas do treinamento dos modelos, consulte o Apêndice \ref{ap1}.
 
-
-
-\newpage
 
 \section{Resultados experimentais}
 
-Neste trabalho, foram feitos 6 experimentos diferentes segundo as combinações dos hiperparâmetro da camada de \textit{Dropout} (0\%, 25\% e 50\%) entre as duas modalidades de LSTM (unidirecional e bidirecional). Os resultados registrados em treinamento nos conjuntos de validação e treino são apresentados nas Figuras 2 e 3. 
+Os modelos foram avaliados na amostra de testes (que representa 20\% do conjunto de dados completo da B2W) segundo as métricas:
 
-Verificamos dos gráficos de treinamento que os modelos de LSTM unidirecionais apresentaram problemas graves de \textit{underfitting}, que impediram o custo de diminuir significativamente em 100 época de treinamento. Isso é esperado, dado que foram feitas simplifcações no modelo, como utilizar uma dimensão baixa na camada de \textit{embeddings} e congelar o treinamento dos mesmos. Uma alternativa para aumentar a complexidades destes modelos seria incluir mais uma camada recorrente unidirecional logo após a primeira.  
+\begin{itemize}
+	\item Acurácia
+	\item BLEU-1 (unigramas)
+	\item BLEU-2 (unigramas e bigramas)
+	\item BLEU-3 (unigramas, bigramas e trigramas)
+	\item BLEU-4 (unigramas, bigramas, trigramas e quadrigramas)
+	\item Medida-Namorada
+	\item METEOR
+\end{itemize}
 
-Para as LSTMs bidirecionais, observamos o comportamento de overfitting descrito no enunciado. Após cerca de 25 épocas, o custo de validação começou a crescer para os três modelos. Verificamos também que a presença de \textit{Dropout} reduziu a diferença entre o custo de treinamento e o custo de validação, conforme o esperado.
+Como os títulos gerados pelos modelos são muitas vezes curtos e podem não possuir nenhum bigrama, trigrama ou quadrigrama, usarei o suavizador proposto por \textcite{lin2004automatic} para calcular as precisões da métrica BLEU:
 
+\begin{equation}
+P_n = \frac{|\text{Modelo}_n \cap \text{Ref}_n| + 1}{|\text{Modelo}_n| + 1}, \quad n \in \{2, 3, 4\}
+\end{equation}
+
+\noindent onde $\text{Ref}_n$ e $\text{Modelo}_n$ são respectivamente os conjuntos dos n-gramas do texto de referência e do título gerado pelo modelo. Para um estudo comparativo entre diferentes técnicas de suavização, ver \textcite{chen2014systematic}.
+
+
+Os resultados obtidos pelos três modelos são apresentados na Tabela \ref{table:results}.
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{@{}lrrrrrrr@{}}
+		\toprule
+		Modelo &
+		\multicolumn{1}{l}{Acurácia} &
+		\multicolumn{1}{l}{BLEU-1} &
+		\multicolumn{1}{l}{BLEU-2} &
+		\multicolumn{1}{l}{BLEU-3} &
+		\multicolumn{1}{l}{BLEU-4} &
+		\multicolumn{1}{l}{METEOR} &
+		\multicolumn{1}{l}{M-Namorada} \\ \midrule
+		BiLSTM    & 2,7\%          & 16,5\%          & 9,8\%           & 6,7\%          & 4,9\%          & 10,8\%          & 49,8\%          \\
+		BERT-CLS  & 3,5\%          & 17,0\%          & 10,4\%          & 6,8\%          & 4,7\%          & 10,3\%          & 61,3\%          \\
+		BERT-MASK & \textbf{4,9\%} & \textbf{17,6\%} & \textbf{11,1\%} & \textbf{7,6\%} & \textbf{5,4\%} & \textbf{12,5\%} & \textbf{65,5\%} \\ \bottomrule
+	\end{tabular}
+	\caption{Métricas avaliadas no conjunto de testes para os três modelos.}
+	\label{table:results}
+\end{table}
 
 \printbibliography
 
