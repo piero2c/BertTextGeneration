@@ -43,9 +43,9 @@
 
 \subsection{Encoder-Decoder BiLSTM}
 
-Pelas especificações da tarefa, o primeiro modelo proposto para o problema de geração automática de títulos  deve ser uma rede neural encoder-decoder com uma LSTM bidirecional ($\overrightarrow{g_{e}}$ e $\overleftarrow{g_{e}}$) como encoder acoplada a um mecanismo de atenção (Figura \ref{lstm_fig}). 
+Pelas especificações da tarefa, o primeiro modelo proposto para o problema de geração automática de títulos  deve ser uma rede neural encoder-decoder com um encoder LSTM bidirecional ($\overrightarrow{g_{e}}$ e $\overleftarrow{g_{e}}$) acoplado a um mecanismo de atenção (Figura \ref{lstm_fig}). 
 
-Na componente do decoder do modelo, escolhi incluir duas LSTMs unidirecionais em sequência. A primeira LSTM recebe o embedding do último token escrito no título, e é inicializada com os estados finais da rede bidirecional concatenados, portanto possuí o dobro de \textit{hidden units} de $\overrightarrow{g_{e}}$ e $\overleftarrow{g_{e}}$. Além disso, é na primeira LSTM do decoder em que é feito o cálculo dos vetores de contexto por meio do mecanismo de atenção do modelo, descrito adiante. Esses vetores são concatenados aos \textit{hidden states} da LSTM e são passados para a LSTM final como input, que finaliza a decodificação do próximo token da sequência.
+Na componente do decoder do modelo escolhi usar duas LSTMs unidirecionais em sequência. A primeira LSTM recebe o embedding do último token escrito no título e é inicializada com os estados finais da rede bidirecional concatenados, portanto possuí o dobro de \textit{hidden units} de $\overrightarrow{g_{e}}$ e $\overleftarrow{g_{e}}$. Além disso, é na primeira LSTM do decoder que é feito o cálculo dos vetores de contexto por meio do mecanismo de atenção do modelo, descrito adiante. Esses vetores são concatenados aos \textit{hidden states} da LSTM e são passados como entrada para a LSTM final, que finaliza a decodificação do próximo token da sequência.
 
 \vspace{2em}
 
@@ -56,14 +56,14 @@ Na componente do decoder do modelo, escolhi incluir duas LSTMs unidirecionais em
 \label{lstm_fig}
 \end{figure}
 
-O mecanismos de atenção adotado para o modelo foi o mecanismo de atenção global proposto por \textcite{luong2015effective} com escores de atenção obtidos a partir do produto interno dos \textit{hidden states}. Graças à segunda LSTM do decoder, o modelo também é capaz de utilizar a informação dos vetores de contexto dos tokens passados.
+O mecanismos de atenção adotado para o modelo foi o mecanismo de atenção global proposto por \textcite{luong2015effective} com escores de atenção obtidos a partir do produto interno dos \textit{hidden states}. Graças à existência da segunda LSTM do decoder, o modelo é também é capaz de incorporar a informação dos vetores de contexto dos tokens passados.
 
 
 \subsection{BERT-CLS e BERT-MASK}
 
-Neste trabalho iremos experimentar com duas variantes de soluções baseadas no BERT (representado na Figura \ref{bert_fig}) para geração de textos de maneira autoregressiva. A primeira variante consiste em utilizar o campo de classificação (token \texttt{[CLS]}) de um modelo BERT pré-treinado para a língua portuguesa (\textcite{souza2020bertimbau}) para prever o próximo token de uma sequência.
+Neste trabalho iremos experimentar com duas variantes de soluções baseadas no BERT (representado na Figura \ref{bert_fig}) para geração de títulos de maneira autoregressiva. A primeira variante consiste em utilizar o campo de classificação (token \texttt{[CLS]}) de um modelo BERT pré-treinado para a língua portuguesa (\textcite{souza2020bertimbau}) para prever o próximo token do título em sequência.
 
-A camada final associada ao token \texttt{[CLS]} do BERT é pré-treinada com a tarefa de \textit{Next Sentence Prediction} (NSP), que consiste em tentar adivinhar se a segunda sentença fornecida (separada pelo token \texttt{[SEP]}) vem depois da primeira sentença em um texto corrido. Para o problema em questão, podemos descartar a camada densa de classificação binária usada para o objetivo de NSP e criar uma nova camada densa com a mesma dimensão final do vocabulário de saída, e utilizarmos essa nova componente para prever o próximo token do título de maneira autoregressiva. Chamaremos esse modelo de BERT-CLS.
+A camada final associada ao token \texttt{[CLS]} do BERT é pré-treinada com a tarefa de \textit{Next Sentence Prediction} (NSP), que consiste em tentar adivinhar se a segunda sentença fornecida (separada pelo token \texttt{[SEP]}) vem depois da primeira sentença em um texto corrido. Para o problema em questão, podemos descartar a camada densa de classificação binária usada na tarefa de NSP e criar uma nova camada densa com a mesma dimensão final do vocabulário de saída, utilizando essa nova componente para prever o próximo token do título de maneira autoregressiva como se estivessemos resolvendo um problema de classificação supervisionada. Chamaremos esse modelo, descrito no enunciado do exercício, de BERT-CLS.
 
 \begin{figure}[h]
 	\centering
@@ -72,17 +72,17 @@ A camada final associada ao token \texttt{[CLS]} do BERT é pré-treinada com a 
 	\label{bert_fig}
 \end{figure}
 
-Alternativamente, podemos tentar aproveitar a semelhança do objetivo deste trabalho com a tarefa de \textit{Masked Language Modelling} (MLM) do modelo pré-treinado, que tenta recuperar os tokens mascarados aleatóriamente nas sentenças. Apesar de parecer a melhor alternativa, existem algumas desvantagens aparentes: no objetivo de geração de texto deste trabalho, vamos sempre adicionar o token \texttt{[MASK]} no final da segunda sentença, que estará sempre seguido do token final \texttt{[SEP]}. Naturalmente, isto irá fazer o modelo original acreditar que o token mascarado é sempre um token próximo ao final de sentença (um caractere de ponto final, por exemplo) e irá prejudicar a performance do texto que iremos gerar de maneira causal autoregressiva. Ao fazermos o \textit{fine tuning} segundo esta abordagem, estamos grosseiramente tentando converter um modelo treinado com a tarefa de \textit{Masked Language Modelling} para um modelo causal de sumarização de textos.
+Alternativamente, podemos tentar aproveitar a semelhança do objetivo deste trabalho com a tarefa de \textit{Masked Language Modelling} (MLM) do BERT pré-treinado, que tenta recuperar os tokens que são mascarados aleatóriamente nas sentenças passadas para o modelo. Apesar de parecer a melhor alternativa, existem algumas desvantagens aparentes: no objetivo de geração de texto deste trabalho, vamos sempre adicionar o token \texttt{[MASK]} no final da segunda sentença (título), que estará sempre seguido do token final \texttt{[SEP]}. Naturalmente, isto irá fazer o modelo original acreditar que o token mascarado é sempre um token próximo ao final de sentença (um caractere de ponto final, por exemplo) e irá prejudicar a performance do texto que iremos gerar de maneira iterativa. Ao fazermos o \textit{fine tuning} segundo esta abordagem, estamos grosseiramente tentando converter um modelo treinado com a tarefa de \textit{Masked Language Modelling} para um modelo causal de geração de títulos.
 
-É difícil de prever de antemão se o BERT-MASK produzirá resultados melhores ou piores que o BERT-CLS (proposto originalmente pelo enunciado da tarefa), então, a título de curiosidade, decidi avaliar a performance destas duas abordagens diferentes.
+É difícil de prever de antemão se o BERT-MASK produzirá resultados melhores ou piores que o BERT-CLS (proposto originalmente pelo enunciado da tarefa), então, a título de curiosidade, decidi avaliar a performance destas duas abordagens neste trabalho.
 
 \section{Treinamento}
 
 \subsection{Encoder-Decoder BiLSTM}
 
-O treinamento da encoder-decoder BiLSTM é feito utilizando a técnica \textit{teacher forcing} (\textcite{williams1989learning}), que passa a sequência correta inteira de tokens para o decoder que tenta prever o próximo token relativamente a cada item da sequência passada. Essa técnica na prática acelera a convergência de modelos sequenciais e usualmente também facilita a implementação destes modelos.
+O treinamento da encoder-decoder BiLSTM é feito utilizando a técnica \textit{teacher forcing} (\textcite{williams1989learning}), que passa a sequência correta inteira de tokens para o decoder que tenta prever o próximo token relativamente a cada item da sequência passada. Essa técnica na prática acelera a convergência de modelos sequenciais e usualmente também facilita a implementação computacional destes modelos.
 
-Treinamos o modelo com \textit{early-stopping} em uma amostra de 72\% do conjunto de dados da base completa da B2W, validando o modelo ao final de cada época em um conjunto de validação que corresponde a 8\% dos dados. O treinamento é interrompido se o custo calculado no conjunto de validação não diminuir em 5 épocas consecutivas. Quando o treinamento é interrompido, apenas o modelo com menor custo no conjunto de validação é salvo.
+Treinamos o modelo com \textit{early-stopping} em uma amostra de 72\% do conjunto de dados da base completa da B2W, validando o modelo ao final de cada época em um conjunto de validação que corresponde a 8\% dos dados. O treinamento é interrompido se o custo calculado no conjunto de validação não diminuir em 5 épocas consecutivas. Quando o treinamento é interrompido, o modelo com menor custo no conjunto de validação é salvo para a etapa de previsão.
 
 Na Figura \ref{att_map}, é representado o mapa de atenção extraido do modelo para um exemplo do conjunto de validação. Verificamos que o modelo treinado foca a atenção em algumas palavras chaves úteis para gerar o título "Produto bom", como "não trava" e "Sem comentários".
 
@@ -95,14 +95,14 @@ Na Figura \ref{att_map}, é representado o mapa de atenção extraido do modelo 
 
 \subsection{BERT-CLS e BERT-MASK}
 
-Seguindo o procedimento de preparação dos dados descrito no enunciado do exercício, utilizamos a mesma amostra de 80\% dos dados da base completa da B2W extraidos para o treinamento da LSTM. Após dividir os dados para a geração de texto token a token (conforme descrito no enunciado) o conjunto de treino final gerado possui cerca de 600 mil instâncias. Dada o elevado número de instâncias de treinamento e o alto nível de esforço computacional necessário no treinamento dos modelos, os modelos são treinados durante apenas uma única época. Por sua vez, como a função de custo foi calculada apenas em dados que não foram vistos previamente pelo modelo, não foi necessário utilizar \textit{early-stopping} para previnir \textit{overfitting}.
+Seguindo o procedimento de preparação dos dados descrito no enunciado do exercício, utilizamos a mesma amostra de 80\% dos dados da base completa da B2W extraidos para o treinamento da LSTM. Após dividir os dados para a geração de texto token a token (conforme descrito no enunciado) o conjunto de treino final gerado possui cerca de 600 mil instâncias. Dada o elevado número de instâncias de treinamento e o alto nível de esforço computacional necessário no treinamento, os modelos são treinados durante apenas uma única época completa no conjunto de treinamento. Por sua vez, como a função de custo foi calculada apenas em dados que não foram vistos previamente pelo modelo, não foi necessário utilizar \textit{early-stopping} para previnir \textit{overfitting}.
 
-O modelo BERT-CLS convergiu de maneira estável, sem precisar de um tamanho de \textit{batch} muito elevado, finalizando após cerca de 10h de treinamento no \textit{Google Colab}. O modelo BERT-MASK exigiu  um esforço maior de treinamento e teve convergência difícil, o que é justificável, visto que neste modelo alteramos a tarefa base de \textit{Masked Language Modelling} em que o modelo foi originalmente treinado. 
+O modelo BERT-CLS convergiu de maneira estável, sem precisar de um tamanho de \textit{batch} muito elevado, finalizando após cerca de 10h de treinamento no \textit{Google Colab}. O modelo BERT-MASK exigiu  um esforço maior de treinamento e teve convergência difícil, o que é justificável, visto que neste modelo alteramos a tarefa base de \textit{Masked Language Modelling} em que o modelo foi originalmente treinado.
 
-Para garantir mais estabilidade no treinamento do BERT-MASK foi necessário utilizar um tamanho de \textit{batch} maior, e consequentemente um número maior de iterações de \textit{gradient accumulation} para possibilitar o treinamento na infraestrutura disponível para o EP. O treinamento do modelo durou cerca de 20h na plataforma do \textit{Google Colab}.
+Para garantir maior estabilidade no treinamento do BERT-MASK, foi necessário utilizar um tamanho de \textit{batch} maior, e consequentemente um número maior de iterações de \textit{gradient accumulation} para possibilitar o treinamento na infraestrutura disponível para o EP. O treinamento do modelo durou cerca de 20h na plataforma do \textit{Google Colab}.
 
 
-As especificações exatas de treinamento de ambos modelos são reproduzidas na Tabela \ref{hyp} a seguir.
+As especificações principais de treinamento de ambos modelos podem ser consultadas na Tabela \ref{hyp} a seguir.
 
 \begin{table}[h!]
 	\centering
@@ -112,7 +112,7 @@ As especificações exatas de treinamento de ambos modelos são reproduzidas na 
 		BERT-CLS  & 5e-5                   & 10                                & 2                        & 20                                                 \\
 		BERT-MASK & 5e-6                   & 12                                & 4                        & 48                                                 \\ \bottomrule
 	\end{tabular}
-	\caption{Hiperparâmetros de treinamento dos modelo BERT-CLS e BERT-MASK: taxa de aprendizado (lr), tamanho do \textit{batch} (\textit{batch}), número de iterações de \textit{gradient accumulation} (GAcc) e o tamanho total do \textit{batch} por iteração.}
+	\caption{Hiperparâmetros de treinamento dos modelo BERT-CLS e BERT-MASK: taxa de aprendizado do otimizador (lr), tamanho do \textit{batch} (\textit{batch}), número de iterações de \textit{gradient accumulation} (GAcc) e o tamanho total do \textit{batch} por iteração.}
 	\label{hyp}
 \end{table}
 
@@ -134,7 +134,7 @@ Os modelos foram avaliados na amostra de testes (que representa 20\% do conjunto
 	\item METEOR
 \end{itemize}
 
-Como os títulos gerados pelos modelos são muitas vezes curtos e podem não possuir nenhum bigrama, triTamanhograma ou quadrigrama, usarei o suavizador proposto por \textcite{lin2004automatic} para calcular as precisões da métrica BLEU:
+Como os títulos gerados pelos modelos são usualmente curtos, o que pode impossibilitar a geração de n-gramas, usarei o suavizador proposto por \textcite{lin2004automatic} para calcular as precisões da métrica BLEU:
 
 \begin{equation}
 P_n = \frac{|\text{Modelo}_n \cap \text{Ref}_n| + 1}{|\text{Modelo}_n| + 1}, \quad n \in \{2, 3, 4\}
