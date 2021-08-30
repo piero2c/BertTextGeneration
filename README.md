@@ -1,4 +1,4 @@
-# Bert for Non-extractive text summarization
+# Bert fine-tuning for non-extractive text summarization tasks
 
 **English description**
 
