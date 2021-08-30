@@ -1,4 +1,4 @@
-# Bert for Seq2Seq customer review summarization
+# Bert for Non-extractive text summarization
 
 **English description**
 
