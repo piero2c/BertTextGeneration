@@ -1,6 +1,0 @@
-*.zip
-*.xlsx
-runs/*
-results/*
-lstm_weights/*
-logs/*
