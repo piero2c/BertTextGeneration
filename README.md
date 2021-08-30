@@ -1,5 +1,19 @@
-# EP3
-Autor: Piero Conti Kauffmann (8940810)
+# Bert for Seq2Seq customer review summarization
+
+**English description**
+
+*This repository contains my submission to the third assigment given in the Computational Linguistics graduate course in University Of São Paulo, 2020 (MAC-5725).*
+   
+*The goal of this project is to evaluate the performance of different methods of adapting bidirectional masked-language models for text generation-based tasks, which usually use unidirectional/causal LMs.*
+   
+*This project implements the following strategies:*
+ - BERT-CLS: BERT with a multiclass classifier trained w/ a next-token prediction objective.
+ - BERT-MASK: Fine-tuning the original MLM classifier layer, masking the last token in the generated sentence (effectively trying to convert a bidirectional model to a causal model).
+ - BiLSTM + Attention Benchmark
+
+*BLEU-n and METEOR scores of the above strategies are compared for a non-extractive text summarization task using the [B2W customer reviews dataset](https://github.com/b2wdigital/b2w-reviews01).* *The final report (written in portuguese) is available [here](https://github.com/piero2c/BertTextGeneration/blob/master/report/main.pdf)*.
+
+*For the specific implementation details, see [`src/`](https://github.com/piero2c/BertTextGeneration/tree/master/src)*.
 
 ----------------------------
 
